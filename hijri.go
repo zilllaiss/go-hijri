@@ -7,6 +7,10 @@ import (
 	"github.com/hablullah/go-juliandays"
 )
 
+var (
+	ErrBeforeHijrStarted = errors.New("date is before hijri calendar started")
+)
+
 // LeapYearsPattern is patterns of leap years in the 30 year cycle.
 type LeapYearsPattern uint8
 
@@ -37,6 +41,43 @@ type HijriDate struct {
 	Pattern LeapYearsPattern
 }
 
+// NewHijriDate creates a new HijriDate struct
+func NewHijriDate(year, month, day int64, leapPattern LeapYearsPattern) (HijriDate, error) {
+	switch true {
+	case year < 1:
+		fallthrough
+	case month < 1:
+		fallthrough
+	case day < 1:
+		return HijriDate{}, errors.New("date cannot be less than 1")
+	}
+
+	extraDay := month % 2
+
+	if isLeapYear(year, leapPattern) && month == 12 {
+		extraDay++
+	}
+
+	daysInMonth := 29 + extraDay
+
+	if day > daysInMonth {
+		return HijriDate{}, errors.New("day is more than the day limit of the month")
+	}
+
+	if month > 12 {
+		return HijriDate{}, errors.New("month is more than 12")
+	}
+
+	h := HijriDate{
+		Day:     day,
+		Month:   month,
+		Year:    year,
+		Pattern: leapPattern,
+	}
+
+	return h, nil
+}
+
 // CreateHijriDate converts normal Gregorian date to Hijri date. Since Hijri calendar is not proleptic
 // any date before 16 July 622 CE (1 Muharram 1 H) will make this method throws error.
 func CreateHijriDate(date time.Time, leapPattern LeapYearsPattern) (HijriDate, error) {
@@ -53,7 +94,7 @@ func CreateHijriDate(date time.Time, leapPattern LeapYearsPattern) (HijriDate, e
 	// Get days since 1 Muharram 1
 	islamicDays := int64(julianDays - 1948438.5)
 	if islamicDays < 0 {
-		return HijriDate{}, errors.New("date is before hijri calendar started")
+		return HijriDate{}, ErrBeforeHijrStarted
 	}
 
 	// Check how many 30 years cycles to reach this day

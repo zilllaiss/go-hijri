@@ -3,6 +3,8 @@
 [![Go Report Card][report-badge]][report-url]
 [![Go Reference][doc-badge]][doc-url]
 
+This repo is a fork of go-hijr by hablullah. Currently it adds only a function 'NewHijriDate'.
+
 Go-Hijri is a Go package for converting Gregorian date to Hijrian date and vice-versa. There are two supported Hijrian calendar :
 
 - the arithmetic calendar which calculated based on arithmetic rules rather than by observation or astronomical calculation,
@@ -17,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hablullah/go-hijri"
+	"github.com/zilllaiss/go-hijri"
 )
 
 func main() {

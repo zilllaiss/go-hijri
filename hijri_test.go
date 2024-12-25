@@ -2,10 +2,12 @@ package hijri_test
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/hablullah/go-hijri"
+	"github.com/zilllaiss/go-hijri"
 )
 
 var hijriTestData []TestData
@@ -33,6 +35,144 @@ func Test_Hijri_ConvertDate(t *testing.T) {
 
 		if strHijriDate != data.Hijri {
 			t.Errorf("%s: want %s got %s\n", data.Gregorian, data.Hijri, strHijriDate)
+		}
+	}
+}
+
+func TestNewHijri(t *testing.T) {
+	// Must be identical
+	for _, data := range hijriTestData {
+		h := strings.Split(data.Hijri, "-")
+		year, _ := strconv.ParseInt(h[0], 10, 64)
+		month, _ := strconv.ParseInt(h[1], 10, 64)
+		day, _ := strconv.ParseInt(h[2], 10, 64)
+
+		hijriDate, err := hijri.NewHijriDate(year, month, day, hijri.Default)
+		if err != nil {
+			t.Error(err)
+		}
+
+		strHijriDate := fmt.Sprintf("%04d-%02d-%02d",
+			hijriDate.Year,
+			hijriDate.Month,
+			hijriDate.Day)
+
+		if strHijriDate != data.Hijri {
+			t.Errorf("%s: want %s got %s\n", data.Gregorian, data.Hijri, strHijriDate)
+		}
+	}
+
+	type hd struct {
+		year, month, day int64
+	}
+
+	// Must not return error
+	mustNotErr := []hd{
+		// leap years
+		{
+			year:  1442,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1445,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1447,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1450,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1453,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1456,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1458,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1461,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1464,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1466,
+			month: 12,
+			day:   30,
+		},
+		{
+			year:  1469,
+			month: 12,
+			day:   30,
+		},
+	}
+
+	for _, h := range mustNotErr {
+		hijridate, err := hijri.NewHijriDate(h.year, h.month, h.day, hijri.Default)
+		if err != nil {
+			t.Errorf("%#v: want no error, got err: %v\n", hijridate, err.Error())
+		}
+	}
+
+	// Must return error
+	mustErr := []hd{
+		// zeroes
+		{
+			year:  0,
+			month: 12,
+			day:   12,
+		},
+		{
+			year:  1,
+			month: 0,
+			day:   12,
+		},
+		{
+			year:  1,
+			month: 12,
+			day:   0,
+		},
+		// maxLimits
+		{
+			year:  2,
+			month: 13,
+			day:   12,
+		},
+		{
+			year:  2,
+			month: 2,
+			day:   30,
+		},
+		{
+			year:  1443,
+			month: 12,
+			day:   30, // non leap years
+		},
+	}
+
+	for _, h := range mustErr {
+		hijridate, err := hijri.NewHijriDate(h.year, h.month, h.day, hijri.Default)
+		if err == nil {
+			t.Errorf("%#v: want error, got no error instead\n", hijridate)
 		}
 	}
 }
